@@ -1,36 +1,44 @@
 package config
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"os"
-	"path/filepath"
+	"errors"
+	"flag"
+	"fmt"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
-	AccessToken  string   `json:"access_token"`
-	Organisation string   `json:"organisation"`
-	Languages    []string `json:"languages"`
-	OnlyPrivate  bool     `json:"only_private"`
-	BackupDir    string   `json:"backup_dir"`
+	AccessToken  string   `envconfig:"github_token"`
+	Organisation string   `envconfig:"organisation" required:"true"`
+	Languages    []string `envconfig:"languages" required:"true"`
+	OnlyPrivate  bool     `envconfig:"only_private"`
+	BackupDir    string   `envconfig:"backup_dir" required:"true"`
 }
 
-func NewConfig(name string) (*Config, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	fileKey := filepath.Join(wd, name)
-	b, err := ioutil.ReadFile(fileKey)
-	if err != nil {
-		return nil, err
-	}
+// NewConfig reads the environment configs into the Config struct
+func NewConfig() (*Config, error) {
+	errfmt := "NewConfig error: %s"
 
 	var cfg Config
-	if err := json.Unmarshal(b, &cfg); err != nil {
-		return nil, err
+	if err := envconfig.Process("ghbackup", &cfg); err != nil {
+		return nil, fmt.Errorf(errfmt, err)
+	}
+
+	if err := parseFlags(&cfg); err != nil {
+		return nil, fmt.Errorf(errfmt, err)
 	}
 
 	return &cfg, nil
+}
+
+func parseFlags(cfg *Config) error {
+	flag.StringVar(&cfg.AccessToken, "token", cfg.AccessToken, "-token=GITHUB_TOKEN")
+	flag.Parse()
+
+	if cfg.AccessToken == "" {
+		return errors.New("GITHUB_TOKEN is not defined")
+	}
+
+	return nil
 }
