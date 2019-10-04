@@ -1,7 +1,0 @@
-{
-    "access_token": "github_access_token",
-    "organisation": "github_organisation_name",
-    "languages": ["go", "php"],
-    "only_private": true,
-    "backup_dir": "absolute_or_rel_path"
-}

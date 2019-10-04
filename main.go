@@ -20,7 +20,7 @@ var (
 )
 
 func main() {
-	cfg, err := config.NewConfig("config.json")
+	cfg, err := config.NewConfig()
 	if err != nil {
 		errLog.Panic(err)
 	}
